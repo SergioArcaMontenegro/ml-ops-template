@@ -128,6 +128,10 @@ Plantilla de arquitectura de nivel de producción para microservicios de inferen
 git clone https://github.com/SergioArcaMontenegro/ml-ops-template.git
 cd ml-ops-template
 
+# Cambiar a tu rama preferida:
+# git checkout main_español   # Versión en español (código, docstrings, README)
+# git checkout main_english   # Versión en inglés (code, docstrings, README)
+
 # Crear entorno virtual e instalar dependencias con uv
 uv sync --frozen --group dev
 source .venv/bin/activate  # En Linux/macOS
