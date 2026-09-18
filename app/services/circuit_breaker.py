@@ -1,9 +1,8 @@
 # app/services/circuit_breaker.py
-"""Implementación de circuit breaker para aislar fallos sostenidos
-del backend de inferencia primario.
+"""Circuit Breaker pattern to isolate persistent ML backend failures.
 
-Estados: CLOSED (normal) -> OPEN (fallback activo) -> HALF_OPEN (prueba
-de recuperación) -> CLOSED o de vuelta a OPEN.
+States: CLOSED (normal) -> OPEN (fallback active) -> HALF_OPEN (recovery trial)
+-> CLOSED or back to OPEN.
 """
 
 from __future__ import annotations
@@ -59,7 +58,7 @@ class CircuitBreaker:
         self._consecutive_failures += 1
 
         if self.state is CircuitState.HALF_OPEN:
-            # Un fallo durante la prueba de recuperación reabre el circuito inmediatamente
+            # Immediate failure in half-open reopens circuit
             self._state = CircuitState.OPEN
             self._opened_at = time.monotonic()
             return
@@ -69,12 +68,12 @@ class CircuitBreaker:
             self._opened_at = time.monotonic()
 
     def force_open(self) -> None:
-        """Permite forzar la apertura del circuito (p. ej. ante drift crítico)."""
+        """Forces the circuit open (e.g., upon critical drift detection)."""
         self._state = CircuitState.OPEN
         self._opened_at = time.monotonic()
 
     def force_close(self) -> None:
-        """Permite forzar el cierre del circuito tras resolución manual."""
+        """Forces the circuit closed after manual resolution."""
         self._state = CircuitState.CLOSED
         self._consecutive_failures = 0
         self._opened_at = None

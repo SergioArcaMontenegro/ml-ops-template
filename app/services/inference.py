@@ -1,6 +1,6 @@
 # app/services/inference.py
-"""Servicio desacoplado de inferencia con soporte multi-backend,
-circuit breaker y degradación controlada a fallback heurístico.
+"""Decoupled inference service with multi-backend support,
+circuit breaker protection, and graceful heuristic fallback.
 """
 
 from __future__ import annotations
@@ -17,7 +17,6 @@ from app.observability.metrics import (
     record_feature_distribution,
 )
 from app.schemas.prediction import (
-    FEATURE_ORDER,
     ModelBackendName,
     PredictionRequest,
     PredictionResponse,
@@ -41,19 +40,19 @@ class InferenceService:
         raw_backend = request.backend_override or self.default_backend
         backend_name = raw_backend if isinstance(raw_backend, ModelBackendName) else ModelBackendName(str(raw_backend))
         backend_label = backend_name.value
-        
+
         feature_dict = request.features.model_dump()
         record_feature_distribution(feature_dict)
         feature_vector = request.features.to_ordered_tuple()
 
-        # Actualizar métrica gauge del circuit breaker (0=closed, 1=half_open, 2=open)
+        # Update circuit breaker gauge metric (0=closed, 1=half_open, 2=open)
         state = self.circuit_breaker.state
         CIRCUIT_STATE_GAUGE.set(0 if state == CircuitState.CLOSED else (1 if state == CircuitState.HALF_OPEN else 2))
 
         is_fallback = False
         active_backend = self.backends.get(backend_name)
 
-        # Si el backend solicitado no existe o el circuit breaker no permite llamadas al primario:
+        # Fall back if backend is unavailable or circuit breaker blocks requests
         if not active_backend or not self.circuit_breaker.allow_request_to_primary():
             is_fallback = True
             active_backend = self.fallback_backend
@@ -67,7 +66,7 @@ class InferenceService:
                 self.circuit_breaker.record_success()
         except Exception as exc:
             logger.error(
-                "Fallo en backend primario %s: %s. Ejecutando fallback heurístico.",
+                "Primary backend failure (%s): %s. Executing heuristic fallback.",
                 backend_label,
                 exc,
                 extra={"request_id": str(request.request_id)},
@@ -81,7 +80,7 @@ class InferenceService:
 
         latency_ms = (perf_counter() - t0) * 1000.0
 
-        # Registrar métricas Prometheus
+        # Prometheus metrics
         MODEL_INFERENCE_SECONDS.labels(backend=backend_label).observe(latency_ms / 1000.0)
         PREDICTION_PROBABILITY_HISTOGRAM.labels(backend=backend_label).observe(probability)
 

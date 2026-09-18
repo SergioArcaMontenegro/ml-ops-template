@@ -1,5 +1,5 @@
 # app/schemas/prediction.py
-"""Esquemas de request/response para el endpoint de inferencia tabular."""
+"""Request/response schemas for tabular inference endpoint."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from pydantic import (
 
 
 class ModelBackendName(str, Enum):
-    """Backends de modelo soportados por el servicio."""
+    """Model backends supported by the service."""
 
     XGBOOST = "xgboost"
     LIGHTGBM = "lightgbm"
@@ -26,8 +26,8 @@ class ModelBackendName(str, Enum):
     HEURISTIC = "heuristic"
 
 
-# El orden de esta lista es contractual: debe coincidir exactamente
-# con el orden de columnas usado durante el entrenamiento offline.
+# Contractual feature order: must match the exact column order
+# used during offline training.
 FEATURE_ORDER: tuple[str, ...] = (
     "customer_tenure_months",
     "monthly_charges",
@@ -40,10 +40,10 @@ FEATURE_ORDER: tuple[str, ...] = (
 
 
 class TabularFeatures(BaseModel):
-    """Vector de features de entrada para el modelo tabular.
+    """Input feature vector for the tabular model.
 
-    Todos los campos son obligatorios y de tipo estricto: no se acepta
-    coerción implícita (p. ej. un string numérico para un campo float).
+    All fields are required with strict typing: implicit type coercion
+    (e.g., numeric string into float) is strictly rejected.
     """
 
     model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
@@ -58,24 +58,24 @@ class TabularFeatures(BaseModel):
 
     @model_validator(mode="after")
     def validate_charges_consistency(self) -> TabularFeatures:
-        """Invariante de negocio: total_charges no puede ser menor que
-        un único mes de monthly_charges si la antigüedad es >= 1 mes.
+        """Business invariant: total_charges cannot be less than monthly_charges
+        if tenure is >= 1 month.
         """
         if self.customer_tenure_months >= 1 and self.total_charges < self.monthly_charges:
             raise ValueError(
-                "total_charges no puede ser menor que monthly_charges "
-                "cuando customer_tenure_months >= 1"
+                "total_charges cannot be less than monthly_charges "
+                "when customer_tenure_months >= 1"
             )
         return self
 
     def to_ordered_tuple(self) -> tuple[float, ...]:
-        """Devuelve los valores en el orden exacto esperado por el modelo."""
+        """Returns values in the exact order expected by the model."""
         raw = self.model_dump()
         return tuple(float(raw[name]) for name in FEATURE_ORDER)
 
 
 class PredictionRequest(BaseModel):
-    """Payload aceptado por POST /v1/predict."""
+    """Payload accepted by POST /v1/predict."""
 
     model_config = ConfigDict(strict=True, extra="forbid")
 
@@ -83,7 +83,7 @@ class PredictionRequest(BaseModel):
     features: TabularFeatures
     backend_override: ModelBackendName | None = Field(
         default=None,
-        description="Permite forzar un backend específico en A/B testing o benchmarking.",
+        description="Allows overriding backend for A/B testing or benchmarking.",
     )
 
     @field_validator("request_id", mode="before")
@@ -91,16 +91,16 @@ class PredictionRequest(BaseModel):
     def reject_nil_uuid(cls, value: object) -> object:
         if isinstance(value, str):
             if value == "00000000-0000-0000-0000-000000000000":
-                raise ValueError("request_id no puede ser el UUID nulo")
+                raise ValueError("request_id cannot be the nil UUID")
             try:
                 return UUID(value)
             except Exception as exc:
-                raise ValueError(f"Formato de UUID inválido: {value}") from exc
+                raise ValueError(f"Invalid UUID format: {value}") from exc
         return value
 
 
 class PredictionResponse(BaseModel):
-    """Respuesta del endpoint de inferencia."""
+    """Response returned by the inference endpoint."""
 
     model_config = ConfigDict(strict=True)
 
@@ -117,7 +117,7 @@ class PredictionResponse(BaseModel):
 
 
 class BatchPredictionRequest(BaseModel):
-    """Payload para inferencia en batch."""
+    """Payload for batch predictions."""
 
     model_config = ConfigDict(strict=True, extra="forbid")
 
@@ -125,7 +125,7 @@ class BatchPredictionRequest(BaseModel):
 
 
 class BatchPredictionResponse(BaseModel):
-    """Respuesta para inferencia en batch."""
+    """Response returned for batch predictions."""
 
     model_config = ConfigDict(strict=True)
 
@@ -134,7 +134,7 @@ class BatchPredictionResponse(BaseModel):
 
 
 class ErrorDetail(BaseModel):
-    """Estructura homogénea para todas las respuestas de error de la API."""
+    """Uniform error structure for all API error responses."""
 
     model_config = ConfigDict(strict=True)
 
