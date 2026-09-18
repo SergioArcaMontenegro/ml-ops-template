@@ -111,9 +111,7 @@ class PredictionResponse(BaseModel):
     backend: ModelBackendName
     inference_latency_ms: Annotated[float, Field(ge=0.0)]
     is_fallback: bool = False
-    generated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class BatchPredictionRequest(BaseModel):

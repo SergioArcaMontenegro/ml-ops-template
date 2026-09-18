@@ -17,7 +17,6 @@ from app.observability.metrics import (
     record_feature_distribution,
 )
 from app.schemas.prediction import (
-    FEATURE_ORDER,
     ModelBackendName,
     PredictionRequest,
     PredictionResponse,
@@ -39,16 +38,22 @@ class InferenceService:
 
     def predict(self, request: PredictionRequest) -> PredictionResponse:
         raw_backend = request.backend_override or self.default_backend
-        backend_name = raw_backend if isinstance(raw_backend, ModelBackendName) else ModelBackendName(str(raw_backend))
+        backend_name = (
+            raw_backend
+            if isinstance(raw_backend, ModelBackendName)
+            else ModelBackendName(str(raw_backend))
+        )
         backend_label = backend_name.value
-        
+
         feature_dict = request.features.model_dump()
         record_feature_distribution(feature_dict)
         feature_vector = request.features.to_ordered_tuple()
 
         # Actualizar métrica gauge del circuit breaker (0=closed, 1=half_open, 2=open)
         state = self.circuit_breaker.state
-        CIRCUIT_STATE_GAUGE.set(0 if state == CircuitState.CLOSED else (1 if state == CircuitState.HALF_OPEN else 2))
+        CIRCUIT_STATE_GAUGE.set(
+            0 if state == CircuitState.CLOSED else (1 if state == CircuitState.HALF_OPEN else 2)
+        )
 
         is_fallback = False
         active_backend = self.backends.get(backend_name)

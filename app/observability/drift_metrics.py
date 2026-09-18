@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import logging
+
 from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
 
 from app.observability.metrics import (
@@ -15,7 +16,9 @@ from app.observability.metrics import (
 logger = logging.getLogger("mlops.drift")
 
 
-def update_drift_gauges(dataset_drift: bool, drift_share: float, concept_drift: float = 0.0) -> None:
+def update_drift_gauges(
+    dataset_drift: bool, drift_share: float, concept_drift: float = 0.0
+) -> None:
     """Actualiza los gauges locales de Prometheus en memoria."""
     DATASET_DRIFT_DETECTED_GAUGE.set(1.0 if dataset_drift else 0.0)
     DATA_DRIFT_SHARE_GAUGE.set(float(drift_share))
@@ -32,9 +35,13 @@ def push_drift_metrics_to_gateway(
     """Empuja métricas calculadas en jobs batch externos hacia Prometheus Pushgateway."""
     registry = CollectorRegistry()
 
-    g_detected = Gauge("dataset_drift_detected", "Drift detectado a nivel dataset", registry=registry)
+    g_detected = Gauge(
+        "dataset_drift_detected", "Drift detectado a nivel dataset", registry=registry
+    )
     g_share = Gauge("data_drift_share", "Proporción de features con drift", registry=registry)
-    g_concept = Gauge("concept_drift_score", "Pérdida de AUC respecto a baseline", registry=registry)
+    g_concept = Gauge(
+        "concept_drift_score", "Pérdida de AUC respecto a baseline", registry=registry
+    )
 
     g_detected.set(1.0 if dataset_drift else 0.0)
     g_share.set(float(drift_share))

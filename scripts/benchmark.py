@@ -72,7 +72,9 @@ def main() -> None:
     else:
         # Vector sintético
         rng = np.random.default_rng(42)
-        features = [tuple(rng.uniform(1.0, 50.0, size=len(FEATURE_ORDER))) for _ in range(args.samples)]
+        features = [
+            tuple(rng.uniform(1.0, 50.0, size=len(FEATURE_ORDER))) for _ in range(args.samples)
+        ]
 
     backends: list[tuple[str, ModelBackend]] = [
         ("HeuristicBackend", HeuristicBackend()),
@@ -86,11 +88,15 @@ def main() -> None:
     if xgb_path.exists():
         backends.append(("XGBoostBackend", XGBoostBackend(xgb_path, version="v1.0.0")))
 
-    print(f"\n{'Backend':<20} | {'p50 (ms)':<10} | {'p95 (ms)':<10} | {'p99 (ms)':<10} | {'Throughput (RPS)':<16}")
+    print(
+        f"\n{'Backend':<20} | {'p50 (ms)':<10} | {'p95 (ms)':<10} | {'p99 (ms)':<10} | {'Throughput (RPS)':<16}"
+    )
     print("-" * 75)
     for name, b in backends:
         res = run_backend_benchmark(b, name, features)
-        print(f"{res.backend_name:<20} | {res.p50_ms:<10} | {res.p95_ms:<10} | {res.p99_ms:<10} | {res.rps:<16}")
+        print(
+            f"{res.backend_name:<20} | {res.p50_ms:<10} | {res.p95_ms:<10} | {res.p99_ms:<10} | {res.rps:<16}"
+        )
     print("-" * 75 + "\n")
 
 

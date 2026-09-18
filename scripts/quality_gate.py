@@ -25,7 +25,7 @@ def evaluate_gate() -> bool:
         print("[ERROR] params.yaml no existe")
         return False
 
-    with open(params_path, "r", encoding="utf-8") as f:
+    with open(params_path, encoding="utf-8") as f:
         params = yaml.safe_load(f)
 
     feature_order = params["feature_order"]
@@ -52,6 +52,7 @@ def evaluate_gate() -> bool:
 
     if onnx_path.exists():
         import onnxruntime as ort
+
         session = ort.InferenceSession(str(onnx_path), providers=["CPUExecutionProvider"])
         input_name = session.get_inputs()[0].name
         mat = X_test.values.astype(np.float32)
@@ -69,6 +70,7 @@ def evaluate_gate() -> bool:
             y_pred_proba = outs[0][:, 1] if outs[0].ndim == 2 else outs[0]
     elif xgb_path.exists():
         import xgboost as xgb
+
         booster = xgb.Booster()
         booster.load_model(str(xgb_path))
         dtest = xgb.DMatrix(X_test.values, feature_names=feature_order)
@@ -76,7 +78,9 @@ def evaluate_gate() -> bool:
 
         for r in X_test.values:
             t0 = time.perf_counter()
-            booster.predict(xgb.DMatrix(np.asarray([r], dtype=np.float32), feature_names=feature_order))
+            booster.predict(
+                xgb.DMatrix(np.asarray([r], dtype=np.float32), feature_names=feature_order)
+            )
             latencies.append((time.perf_counter() - t0) * 1000.0)
     else:
         print("[ERROR] No se encontró ningún modelo en models/")

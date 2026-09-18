@@ -6,8 +6,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from typing import Any, cast
 
 from fastapi import BackgroundTasks, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -132,8 +133,8 @@ app.add_middleware(MetricsMiddleware)
 app.add_middleware(StructuredLoggingMiddleware)
 
 # Manejadores de excepción
-app.add_exception_handler(RequestValidationError, validation_exception_handler)
-app.add_exception_handler(InferenceServiceError, inference_service_exception_handler)
+app.add_exception_handler(RequestValidationError, cast(Any, validation_exception_handler))
+app.add_exception_handler(InferenceServiceError, cast(Any, inference_service_exception_handler))
 app.add_exception_handler(Exception, unhandled_exception_handler)
 
 

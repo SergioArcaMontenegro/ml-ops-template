@@ -1,6 +1,5 @@
 """Tests unitarios para validación estricta de esquemas Pydantic V2 (Capítulo 1)."""
 
-from uuid import UUID, uuid4
 import pytest
 from pydantic import ValidationError
 

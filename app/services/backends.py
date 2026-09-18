@@ -27,14 +27,19 @@ class XGBoostBackend:
         if not model_path.exists():
             raise FileNotFoundError(f"No se encontró el modelo XGBoost en {model_path}")
         import xgboost as xgb
+
         self._booster = xgb.Booster()
         self._booster.load_model(str(model_path))
         self.version = version
 
     def predict_proba(self, features: tuple[float, ...]) -> float:
         import xgboost as xgb
+
         from app.schemas.prediction import FEATURE_ORDER
-        matrix = xgb.DMatrix(np.asarray([features], dtype=np.float32), feature_names=list(FEATURE_ORDER))
+
+        matrix = xgb.DMatrix(
+            np.asarray([features], dtype=np.float32), feature_names=list(FEATURE_ORDER)
+        )
         prediction = self._booster.predict(matrix)
         return float(prediction[0])
 
@@ -46,6 +51,7 @@ class LightGBMBackend:
         if not model_path.exists():
             raise FileNotFoundError(f"No se encontró el modelo LightGBM en {model_path}")
         import lightgbm as lgb
+
         self._booster = lgb.Booster(model_file=str(model_path))
         self.version = version
 

@@ -1,6 +1,7 @@
 """Tests de integración para la API HTTP de FastAPI."""
 
 from uuid import uuid4
+
 from fastapi.testclient import TestClient
 
 

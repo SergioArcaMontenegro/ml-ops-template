@@ -16,10 +16,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import yaml
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import roc_auc_score, f1_score
 import xgboost as xgb
+import yaml
+from sklearn.metrics import f1_score, roc_auc_score
+from sklearn.model_selection import train_test_split
 
 from app.schemas.prediction import FEATURE_ORDER
 
@@ -49,22 +49,24 @@ def generate_synthetic_data(n_samples: int = 2000, seed: int = 42) -> pd.DataFra
     prob = 1.0 / (1.0 + np.exp(-logit))
     churn = (prob >= 0.5).astype(int)
 
-    df = pd.DataFrame({
-        "customer_tenure_months": tenure,
-        "monthly_charges": monthly,
-        "total_charges": total,
-        "num_support_tickets": tickets,
-        "contract_type_code": contract,
-        "has_dependents": dependents,
-        "avg_session_duration_min": avg_session,
-        "churn": churn,
-    })
+    df = pd.DataFrame(
+        {
+            "customer_tenure_months": tenure,
+            "monthly_charges": monthly,
+            "total_charges": total,
+            "num_support_tickets": tickets,
+            "contract_type_code": contract,
+            "has_dependents": dependents,
+            "avg_session_duration_min": avg_session,
+            "churn": churn,
+        }
+    )
     return df
 
 
 def train_model(params_path: Path = Path("params.yaml")) -> None:
     """Ejecuta el pipeline de preparación y entrenamiento."""
-    with open(params_path, "r", encoding="utf-8") as f:
+    with open(params_path, encoding="utf-8") as f:
         params = yaml.safe_load(f)
 
     data_cfg = params.get("data", {})
@@ -76,7 +78,7 @@ def train_model(params_path: Path = Path("params.yaml")) -> None:
     train_path = Path(data_cfg.get("train_path", "data/processed/train.parquet"))
     test_path = Path(data_cfg.get("test_path", "data/processed/test.parquet"))
     ref_path = Path(data_cfg.get("reference_path", "data/reference/reference_dataset.parquet"))
-    
+
     train_path.parent.mkdir(parents=True, exist_ok=True)
     ref_path.parent.mkdir(parents=True, exist_ok=True)
     Path("models").mkdir(parents=True, exist_ok=True)
@@ -98,7 +100,10 @@ def train_model(params_path: Path = Path("params.yaml")) -> None:
     X = df[feature_cols]
     y = df["churn"]
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=data_cfg.get("test_size", 0.2), random_state=data_cfg.get("random_state", 42)
+        X,
+        y,
+        test_size=data_cfg.get("test_size", 0.2),
+        random_state=data_cfg.get("random_state", 42),
     )
 
     X_train.to_parquet(train_path, index=False)

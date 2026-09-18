@@ -28,5 +28,5 @@ errorlog = "-"
 loglevel = "info"
 
 preload_app = False  # False: cada worker carga el modelo de forma independiente
-                      # en su propio lifespan, evitando compartir estado de C
-                      # extensions (xgboost) entre procesos via fork().
+# en su propio lifespan, evitando compartir estado de C
+# extensions (xgboost) entre procesos via fork().

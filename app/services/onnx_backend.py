@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+
 import numpy as np
 
 
@@ -29,9 +29,7 @@ class ONNXBackend:
 
         session_options = ort.SessionOptions()
         session_options.intra_op_num_threads = intra_op_num_threads
-        session_options.graph_optimization_level = (
-            ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-        )
+        session_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
 
         self._session = ort.InferenceSession(
             str(model_path),
@@ -55,7 +53,7 @@ class ONNXBackend:
             elif hasattr(probabilities_output, "shape") and len(probabilities_output.shape) == 2:
                 # Formato matriz: [[0.1, 0.9]]
                 return float(probabilities_output[0][1])
-        
+
         # Fallback a outputs[0]
         first_out = outputs[0]
         if hasattr(first_out, "ndim") and first_out.ndim == 2 and first_out.shape[1] > 1:

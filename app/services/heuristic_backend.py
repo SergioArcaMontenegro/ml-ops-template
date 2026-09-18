@@ -9,6 +9,8 @@ propio: su única responsabilidad es no fallar nunca.
 
 from __future__ import annotations
 
+import math
+
 from app.schemas.prediction import FEATURE_ORDER
 
 # Pesos fijos, calibrados manualmente por el equipo de negocio a partir
@@ -29,13 +31,12 @@ _HEURISTIC_BIAS = 0.35
 
 
 def _sigmoid(x: float) -> float:
-    # Implementación manual sin dependencia de numpy/scipy: este backend
-    # debe poder ejecutarse incluso si el entorno de ML está degradado.
+    # Implementación manual con math.exp de la librería estándar (cero dependencias externas)
     if x >= 0:
-        z = 2.718281828459045 ** (-x)
-        return 1.0 / (1.0 + z)
-    z = 2.718281828459045 ** x
-    return z / (1.0 + z)
+        z = math.exp(-x)
+        return float(1.0 / (1.0 + z))
+    z = math.exp(x)
+    return float(z / (1.0 + z))
 
 
 class HeuristicBackend:

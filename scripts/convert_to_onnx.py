@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-import numpy as np
 
 from app.schemas.prediction import FEATURE_ORDER
 
@@ -41,7 +40,9 @@ def convert_model(
         output_path.write_bytes(onnx_model.SerializeToString())
         print(f"-> Modelo ONNX guardado exitosamente en {output_path}")
     except Exception as exc:
-        print(f"[AVISO] Conversión con onnxmltools falló ({exc}). Creando fallback de grafo ONNX o dummy.")
+        print(
+            f"[AVISO] Conversión con onnxmltools falló ({exc}). Creando fallback de grafo ONNX o dummy."
+        )
 
 
 def main() -> None:

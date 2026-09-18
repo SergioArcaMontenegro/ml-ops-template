@@ -1,5 +1,5 @@
 {
   "roc_auc": 0.9969,
   "f1": 0.9762,
-  "p95_latency_ms": 5.33
+  "p95_latency_ms": 3.46
 }
