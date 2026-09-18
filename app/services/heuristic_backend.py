@@ -26,7 +26,7 @@ _HEURISTIC_BIAS = 0.35
 
 
 def _sigmoid(x: float) -> float:
-    # Pure Python implementation with math.exp from standard library (zero external dependencies)
+    # Implementación manual con math.exp de la librería estándar (cero dependencias externas)
     if x >= 0:
         z = math.exp(-x)
         return float(1.0 / (1.0 + z))

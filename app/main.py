@@ -132,7 +132,7 @@ app = FastAPI(
 app.add_middleware(MetricsMiddleware)
 app.add_middleware(StructuredLoggingMiddleware)
 
-# Exception handlers
+# Manejadores de excepción
 app.add_exception_handler(RequestValidationError, cast(Any, validation_exception_handler))
 app.add_exception_handler(InferenceServiceError, cast(Any, inference_service_exception_handler))
 app.add_exception_handler(Exception, unhandled_exception_handler)
