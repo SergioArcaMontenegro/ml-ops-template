@@ -16,7 +16,9 @@ logger = logging.getLogger("mlops.drift_gate")
 _CHECK_INTERVAL_SECONDS = 30
 
 
-async def periodic_drift_gate(circuit_breaker: CircuitBreaker, critical_threshold: float = 0.08) -> None:
+async def periodic_drift_gate(
+    circuit_breaker: CircuitBreaker, critical_threshold: float = 0.08
+) -> None:
     """Fuerza la apertura manual del circuito si el último concept drift
     reportado supera el umbral crítico, garantizando degradación controlada.
     """

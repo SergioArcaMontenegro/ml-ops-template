@@ -53,7 +53,7 @@ async def periodic_streaming_drift_check() -> None:
 
         try:
             current_df = pd.DataFrame(list(_window))[list(FEATURE_ORDER)]
-            
+
             # Evaluación con Evidently AI si está instalado, o cálculo estadístico básico
             from evidently.metric_preset import DataDriftPreset
             from evidently.report import Report

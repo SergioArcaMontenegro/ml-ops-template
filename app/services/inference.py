@@ -38,7 +38,11 @@ class InferenceService:
 
     def predict(self, request: PredictionRequest) -> PredictionResponse:
         raw_backend = request.backend_override or self.default_backend
-        backend_name = raw_backend if isinstance(raw_backend, ModelBackendName) else ModelBackendName(str(raw_backend))
+        backend_name = (
+            raw_backend
+            if isinstance(raw_backend, ModelBackendName)
+            else ModelBackendName(str(raw_backend))
+        )
         backend_label = backend_name.value
 
         feature_dict = request.features.model_dump()
@@ -47,7 +51,9 @@ class InferenceService:
 
         # Update circuit breaker gauge metric (0=closed, 1=half_open, 2=open)
         state = self.circuit_breaker.state
-        CIRCUIT_STATE_GAUGE.set(0 if state == CircuitState.CLOSED else (1 if state == CircuitState.HALF_OPEN else 2))
+        CIRCUIT_STATE_GAUGE.set(
+            0 if state == CircuitState.CLOSED else (1 if state == CircuitState.HALF_OPEN else 2)
+        )
 
         is_fallback = False
         active_backend = self.backends.get(backend_name)

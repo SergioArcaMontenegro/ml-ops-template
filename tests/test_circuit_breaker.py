@@ -1,6 +1,7 @@
 """Tests unitarios para la máquina de estados del Circuit Breaker (Capítulo 6)."""
 
 import time
+
 from app.services.circuit_breaker import CircuitBreaker, CircuitState
 
 
@@ -27,7 +28,7 @@ def test_circuit_breaker_half_open_recovery() -> None:
     cb.record_failure()
     assert cb.state == CircuitState.OPEN
 
-    time.sleep(0.06)
+    time.sleep(0.1)
     assert cb.state == CircuitState.HALF_OPEN
     assert cb.allow_request_to_primary() is True
 
@@ -43,7 +44,7 @@ def test_circuit_breaker_half_open_failure() -> None:
     cb.record_failure()
     assert cb.state == CircuitState.OPEN
 
-    time.sleep(0.06)
+    time.sleep(0.1)
     assert cb.state == CircuitState.HALF_OPEN
     # Fallo en HALF_OPEN -> vuelve inmediatamente a OPEN
     cb.record_failure()

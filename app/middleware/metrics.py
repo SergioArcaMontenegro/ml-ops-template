@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import time
+
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.observability.metrics import HTTP_REQUEST_DURATION_SECONDS, HTTP_REQUESTS_TOTAL
@@ -34,7 +35,8 @@ class MetricsMiddleware:
                 status_holder["value"] = message["status"]
             await send(message)
 
-        route_path = scope.get("route").path if scope.get("route") else path or "unknown"
+        route = scope.get("route")
+        route_path = getattr(route, "path", path or "unknown")
 
         try:
             await self.app(scope, receive, send_wrapper)
@@ -42,9 +44,9 @@ class MetricsMiddleware:
             elapsed_seconds = time.perf_counter() - start_time
             method = scope.get("method", "UNKNOWN")
 
-            HTTP_REQUEST_DURATION_SECONDS.labels(
-                method=method, path=route_path
-            ).observe(elapsed_seconds)
+            HTTP_REQUEST_DURATION_SECONDS.labels(method=method, path=route_path).observe(
+                elapsed_seconds
+            )
 
             HTTP_REQUESTS_TOTAL.labels(
                 method=method,

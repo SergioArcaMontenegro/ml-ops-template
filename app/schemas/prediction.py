@@ -63,8 +63,7 @@ class TabularFeatures(BaseModel):
         """
         if self.customer_tenure_months >= 1 and self.total_charges < self.monthly_charges:
             raise ValueError(
-                "total_charges cannot be less than monthly_charges "
-                "when customer_tenure_months >= 1"
+                "total_charges cannot be less than monthly_charges when customer_tenure_months >= 1"
             )
         return self
 
@@ -111,9 +110,7 @@ class PredictionResponse(BaseModel):
     backend: ModelBackendName
     inference_latency_ms: Annotated[float, Field(ge=0.0)]
     is_fallback: bool = False
-    generated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class BatchPredictionRequest(BaseModel):

@@ -36,7 +36,9 @@ def run_batch_drift(
     ref_df = pd.read_parquet(reference_path)[features]
     curr_df = pd.read_parquet(current_path)[features]
 
-    print(f"Ejecutando DataDriftPreset sobre {len(curr_df)} registros contra referencia ({len(ref_df)})...")
+    print(
+        f"Ejecutando DataDriftPreset sobre {len(curr_df)} registros contra referencia ({len(ref_df)})..."
+    )
     report = Report(metrics=[DataDriftPreset()])
     report.run(reference_data=ref_df, current_data=curr_df)
 
@@ -64,7 +66,9 @@ def run_batch_drift(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Análisis batch de drift con Evidently")
-    parser.add_argument("--ref", type=Path, default=Path("data/reference/reference_dataset.parquet"))
+    parser.add_argument(
+        "--ref", type=Path, default=Path("data/reference/reference_dataset.parquet")
+    )
     parser.add_argument("--current", type=Path, default=Path("data/processed/test.parquet"))
     parser.add_argument("--output", type=Path, default=Path("reports/drift_report.html"))
     parser.add_argument("--gateway", type=str, default="http://localhost:9091")

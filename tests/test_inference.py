@@ -1,6 +1,7 @@
 """Tests unitarios para la capa de servicio de inferencia desacoplada."""
 
 from uuid import uuid4
+
 from app.schemas.prediction import ModelBackendName, PredictionRequest, TabularFeatures
 from app.services.heuristic_backend import HeuristicBackend
 from app.services.inference import InferenceService
@@ -14,7 +15,9 @@ def test_heuristic_backend_execution(valid_tabular_features: TabularFeatures) ->
     assert backend.version == "heuristic-fallback-v1"
 
 
-def test_inference_service_predict(heuristic_service: InferenceService, valid_tabular_features: TabularFeatures) -> None:
+def test_inference_service_predict(
+    heuristic_service: InferenceService, valid_tabular_features: TabularFeatures
+) -> None:
     req = PredictionRequest(request_id=uuid4(), features=valid_tabular_features)
     resp = heuristic_service.predict(req)
 

@@ -56,7 +56,9 @@ def run_smoke_test(base_url: str = "http://localhost:8000") -> bool:
             if "churn_probability" not in data or "predicted_label" not in data:
                 print(f"[FAIL] Respuesta malformada: {data}")
                 return False
-            print(f"[PASS] /v1/predict responde 200 OK en {lat_ms:.2f}ms (Prob: {data['churn_probability']})")
+            print(
+                f"[PASS] /v1/predict responde 200 OK en {lat_ms:.2f}ms (Prob: {data['churn_probability']})"
+            )
         except Exception as exc:
             print(f"[FAIL] Error en petición de inferencia: {exc}")
             return False
@@ -77,7 +79,9 @@ def run_smoke_test(base_url: str = "http://localhost:8000") -> bool:
         try:
             r_bad = client.post("/v1/predict", json=bad_payload)
             if r_bad.status_code != 422:
-                print(f"[FAIL] Validación estricta falló: se esperaba 422 y se obtuvo {r_bad.status_code}")
+                print(
+                    f"[FAIL] Validación estricta falló: se esperaba 422 y se obtuvo {r_bad.status_code}"
+                )
                 return False
             print("[PASS] Validación estricta Pydantic V2 rechaza tipos erróneos con 422")
         except Exception as exc:

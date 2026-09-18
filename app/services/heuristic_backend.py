@@ -8,6 +8,8 @@ responsibility is to never fail.
 
 from __future__ import annotations
 
+import math
+
 from app.schemas.prediction import FEATURE_ORDER
 
 # Static heuristic weights calibrated by business domain knowledge
@@ -24,12 +26,12 @@ _HEURISTIC_BIAS = 0.35
 
 
 def _sigmoid(x: float) -> float:
-    # Pure Python implementation to avoid numpy/scipy dependencies
+    # Pure Python implementation with math.exp from standard library (zero external dependencies)
     if x >= 0:
-        z = 2.718281828459045 ** (-x)
-        return 1.0 / (1.0 + z)
-    z = 2.718281828459045 ** x
-    return z / (1.0 + z)
+        z = math.exp(-x)
+        return float(1.0 / (1.0 + z))
+    z = math.exp(x)
+    return float(z / (1.0 + z))
 
 
 class HeuristicBackend:

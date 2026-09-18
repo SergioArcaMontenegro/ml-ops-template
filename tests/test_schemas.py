@@ -1,6 +1,5 @@
 """Unit tests for strict Pydantic V2 schemas (Chapter 1)."""
 
-from uuid import UUID, uuid4
 import pytest
 from pydantic import ValidationError
 
