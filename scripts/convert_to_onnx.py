@@ -5,7 +5,11 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
+
+# Garantizar acceso al paquete 'app' independientemente del directorio de ejecución
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.schemas.prediction import FEATURE_ORDER
 
