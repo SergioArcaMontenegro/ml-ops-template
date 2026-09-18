@@ -1,5 +1,5 @@
 # app/services/backends.py
-"""Backends de modelo intercambiables tras un protocolo común."""
+"""Interchangeable model backends conforming to a shared protocol."""
 
 from __future__ import annotations
 
@@ -11,21 +11,21 @@ import numpy as np
 
 @runtime_checkable
 class ModelBackend(Protocol):
-    """Contrato mínimo que debe cumplir cualquier backend de modelo."""
+    """Minimal contract required for any model backend implementation."""
 
     version: str
 
     def predict_proba(self, features: tuple[float, ...]) -> float:
-        """Devuelve la probabilidad de la clase positiva para un único vector."""
+        """Returns positive class probability for a single feature vector."""
         ...
 
 
 class XGBoostBackend:
-    """Backend basado en xgboost.Booster cargado desde un fichero binario o JSON."""
+    """Backend powered by an xgboost.Booster loaded from disk."""
 
     def __init__(self, model_path: Path, version: str) -> None:
         if not model_path.exists():
-            raise FileNotFoundError(f"No se encontró el modelo XGBoost en {model_path}")
+            raise FileNotFoundError(f"XGBoost model file not found at {model_path}")
         import xgboost as xgb
 
         self._booster = xgb.Booster()
@@ -45,11 +45,11 @@ class XGBoostBackend:
 
 
 class LightGBMBackend:
-    """Backend basado en lightgbm.Booster."""
+    """Backend powered by a lightgbm.Booster."""
 
     def __init__(self, model_path: Path, version: str) -> None:
         if not model_path.exists():
-            raise FileNotFoundError(f"No se encontró el modelo LightGBM en {model_path}")
+            raise FileNotFoundError(f"LightGBM model file not found at {model_path}")
         import lightgbm as lgb
 
         self._booster = lgb.Booster(model_file=str(model_path))

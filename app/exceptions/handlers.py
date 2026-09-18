@@ -1,5 +1,5 @@
 # app/exceptions/handlers.py
-"""Manejadores de excepción custom para respuestas de error homogéneas."""
+"""Custom exception handlers for uniform API error responses."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from app.schemas.prediction import ErrorDetail
 
 
 class InferenceServiceError(Exception):
-    """Excepción base para errores de la capa de servicio de inferencia."""
+    """Base exception for domain inference layer failures."""
 
 
 def _get_request_id(request: Request) -> UUID:
@@ -32,7 +32,7 @@ def _get_request_id(request: Request) -> UUID:
 async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
-    """Traduce errores de validación de Pydantic a un contrato de error estable."""
+    """Translates Pydantic validation errors into a stable error contract."""
     request_id = _get_request_id(request)
 
     fields = [
@@ -46,7 +46,7 @@ async def validation_exception_handler(
     detail = ErrorDetail(
         request_id=request_id,
         error_code="VALIDATION_ERROR",
-        message="El payload no cumple el esquema esperado.",
+        message="Request payload does not match expected schema.",
         fields=fields,
     )
     return JSONResponse(
@@ -58,7 +58,7 @@ async def validation_exception_handler(
 async def inference_service_exception_handler(
     request: Request, exc: InferenceServiceError
 ) -> JSONResponse:
-    """Traduce fallos de la capa de dominio a un 503 Service Unavailable."""
+    """Translates domain layer failures into HTTP 503 Service Unavailable."""
     request_id = _get_request_id(request)
 
     detail = ErrorDetail(
@@ -73,13 +73,13 @@ async def inference_service_exception_handler(
 
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Red de seguridad final: nunca debe filtrarse un traceback al cliente."""
+    """Final safety net: unhandled exceptions never leak tracebacks to clients."""
     request_id = _get_request_id(request)
 
     detail = ErrorDetail(
         request_id=request_id,
         error_code="INTERNAL_ERROR",
-        message="Error interno no controlado. Ha sido registrado para su análisis.",
+        message="Internal server error. The incident has been logged.",
     )
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -1,5 +1,5 @@
 # app/main.py
-"""Punto de entrada FastAPI del microservicio de inferencia de producción."""
+"""FastAPI production inference microservice entrypoint."""
 
 from __future__ import annotations
 
@@ -50,38 +50,38 @@ logger = logging.getLogger("mlops.main")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Gestiona el ciclo de vida: inicializa backends, circuit breaker y drift tasks."""
-    logger.info("Iniciando servicio de inferencia MLOps...")
+    """Manages service lifecycle: initializes backends, circuit breaker, and drift tasks."""
+    logger.info("Initializing MLOps inference service...")
 
-    # 1. Instanciar backends disponibles
+    # 1. Instantiate available backends
     heuristic = HeuristicBackend()
     backends: dict[ModelBackendName, ModelBackend] = {
         ModelBackendName.HEURISTIC: heuristic,
     }
 
-    # Intentar cargar backend ONNX
+    # Attempt to load ONNX backend
     if settings.model_path.exists():
         try:
             backends[ModelBackendName.ONNX] = ONNXBackend(
                 model_path=settings.model_path,
                 version=settings.model_version,
             )
-            logger.info("Backend ONNX inicializado desde %s", settings.model_path)
+            logger.info("ONNX backend initialized from %s", settings.model_path)
         except Exception as exc:
-            logger.warning("No se pudo cargar backend ONNX: %s", exc)
+            logger.warning("Failed to load ONNX backend: %s", exc)
 
-    # Intentar cargar backend XGBoost
+    # Attempt to load XGBoost backend
     if settings.xgboost_model_path.exists():
         try:
             backends[ModelBackendName.XGBOOST] = XGBoostBackend(
                 model_path=settings.xgboost_model_path,
                 version=settings.model_version,
             )
-            logger.info("Backend XGBoost inicializado desde %s", settings.xgboost_model_path)
+            logger.info("XGBoost backend initialized from %s", settings.xgboost_model_path)
         except Exception as exc:
-            logger.warning("No se pudo cargar backend XGBoost: %s", exc)
+            logger.warning("Failed to load XGBoost backend: %s", exc)
 
-    # Backend por defecto
+    # Default backend
     default_backend_name = ModelBackendName.HEURISTIC
     if settings.model_backend in [b.value for b in ModelBackendName]:
         requested_name = ModelBackendName(settings.model_backend)
@@ -102,10 +102,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     )
     app.state.inference_service = inference_service
 
-    # 2. Inicializar observabilidad de drift
+    # 2. Initialize drift reference dataset
     initialize_reference(settings.reference_data_path)
 
-    # 3. Lanzar tareas en background
+    # 3. Launch background monitoring tasks
     drift_check_task = asyncio.create_task(periodic_streaming_drift_check())
     drift_gate_task = asyncio.create_task(
         periodic_drift_gate(circuit_breaker, settings.drift_critical_threshold)
@@ -113,11 +113,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     yield
 
-    logger.info("Deteniendo tareas de background...")
+    logger.info("Stopping background tasks...")
     drift_check_task.cancel()
     drift_gate_task.cancel()
     await asyncio.gather(drift_check_task, drift_gate_task, return_exceptions=True)
-    logger.info("Servicio detenido limpiamente.")
+    logger.info("Service shutdown cleanly.")
 
 
 app = FastAPI(
@@ -128,7 +128,7 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Middlewares en orden ASGI (ejecución invertida en entrada, directa en salida)
+# ASGI middleware stack
 app.add_middleware(MetricsMiddleware)
 app.add_middleware(StructuredLoggingMiddleware)
 
@@ -144,12 +144,12 @@ async def predict(
     payload: PredictionRequest,
     background_tasks: BackgroundTasks,
 ) -> PredictionResponse:
-    """Endpoint principal de inferencia tabular."""
+    """Primary tabular inference endpoint."""
     request.state.request_id = payload.request_id
     service: InferenceService = request.app.state.inference_service
     response = service.predict(payload)
 
-    # Logging asíncrono para cálculo de data drift y monitoreo
+    # Asynchronous background logging for data drift & audit
     background_tasks.add_task(
         record_features,
         payload.features,
@@ -157,10 +157,10 @@ async def predict(
     )
     record_to_window(payload.features)
 
-    # Soporte para tráfico Shadow (Capítulo 9)
+    # Shadow Traffic support (Chapter 9)
     if settings.shadow_mode or request.headers.get(settings.shadow_header_name) == "true":
         logger.info(
-            "Petición en modo Shadow procesada",
+            "Shadow mode request processed",
             extra={"shadow": True, "request_id": str(payload.request_id)},
         )
 
@@ -173,7 +173,7 @@ async def predict_batch(
     payload: BatchPredictionRequest,
     background_tasks: BackgroundTasks,
 ) -> BatchPredictionResponse:
-    """Endpoint para predicciones agrupadas en lote."""
+    """Batch prediction endpoint."""
     service: InferenceService = request.app.state.inference_service
     t0 = time.perf_counter()
     responses: list[PredictionResponse] = []
@@ -193,13 +193,13 @@ async def predict_batch(
 
 @app.get("/healthz", status_code=status.HTTP_200_OK)
 async def healthz() -> dict[str, str]:
-    """Healthcheck básico para Docker/Kubernetes Liveness."""
+    """Basic health check endpoint for Docker/Kubernetes liveness."""
     return {"status": "healthy"}
 
 
 @app.get("/ready", status_code=status.HTTP_200_OK)
 async def ready(request: Request) -> JSONResponse:
-    """Readiness probe: verifica si la capa de inferencia está disponible."""
+    """Readiness probe checking inference service availability."""
     service: InferenceService | None = getattr(request.app.state, "inference_service", None)
     if not service:
         return JSONResponse(
@@ -211,5 +211,5 @@ async def ready(request: Request) -> JSONResponse:
 
 @app.get("/metrics")
 async def metrics() -> Response:
-    """Expone métricas en formato estándar de Prometheus."""
+    """Exposes metrics in standard Prometheus format."""
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)

@@ -1,10 +1,9 @@
 # app/services/heuristic_backend.py
-"""Backend de fallback basado en una regla de negocio simple, sin ML.
+"""Fallback backend based on simple business heuristics, without ML.
 
-Se activa cuando el circuit breaker abre el circuito hacia el backend
-primario o cuando el drift supera el umbral crítico (sección 6.6).
-No debe depender de ningún artefacto externo ni librería con estado
-propio: su única responsabilidad es no fallar nunca.
+Activated when the circuit breaker trips open or when concept drift
+exceeds critical thresholds. Has zero external dependencies: its sole
+responsibility is to never fail.
 """
 
 from __future__ import annotations
@@ -13,11 +12,7 @@ import math
 
 from app.schemas.prediction import FEATURE_ORDER
 
-# Pesos fijos, calibrados manualmente por el equipo de negocio a partir
-# de reglas históricas conocidas ANTES de que existiera el modelo de ML.
-# Se versionan en código, no en un artefacto de modelo, precisamente
-# para que este backend no comparta ningún punto de fallo con el
-# pipeline de entrenamiento/despliegue del modelo principal.
+# Static heuristic weights calibrated by business domain knowledge
 _HEURISTIC_WEIGHTS: dict[str, float] = {
     "customer_tenure_months": -0.01,
     "monthly_charges": 0.004,
@@ -40,7 +35,7 @@ def _sigmoid(x: float) -> float:
 
 
 class HeuristicBackend:
-    """Backend de reglas fijas, usado como fallback de última instancia."""
+    """Fixed-rule fallback backend used as a last line of defense."""
 
     version = "heuristic-fallback-v1"
 

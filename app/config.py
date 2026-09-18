@@ -1,4 +1,4 @@
-"""Configuración centralizada de la aplicación usando Pydantic Settings."""
+"""Centralized application configuration using Pydantic Settings."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Parámetros de configuración del servicio."""
+    """Service configuration parameters."""
 
     model_config = SettingsConfigDict(
         env_file=".env",
