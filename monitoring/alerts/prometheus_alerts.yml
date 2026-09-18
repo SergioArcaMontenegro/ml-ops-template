@@ -1,0 +1,69 @@
+groups:
+  - name: inference_service_availability
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status_code=~"5.."}[5m]))
+            /
+          sum(rate(http_requests_total[5m]))
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Tasa de error 5xx superior al 5% durante 5 minutos"
+          runbook: "https://wiki.internal/runbooks/inference-high-error-rate"
+
+      - alert: CircuitBreakerOpen
+        expr: circuit_breaker_state == 2
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "El circuit breaker ha abierto el circuito: sirviendo desde HeuristicBackend"
+          runbook: "https://wiki.internal/runbooks/inference-circuit-open"
+
+      - alert: HighP99Latency
+        expr: |
+          histogram_quantile(
+            0.99,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, path)
+          ) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p99 de latencia HTTP por encima de 200ms durante 10 minutos"
+          runbook: "https://wiki.internal/runbooks/inference-latency"
+
+  - name: model_quality
+    rules:
+      - alert: DataDriftDetected
+        expr: dataset_drift_detected == 1
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Evidently ha detectado data drift a nivel de dataset en el último batch"
+          runbook: "https://wiki.internal/runbooks/data-drift"
+
+      - alert: ConceptDriftCritical
+        expr: concept_drift_score > 0.05
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Caída de ROC AUC superior a 0.05 respecto al baseline de entrenamiento"
+          runbook: "https://wiki.internal/runbooks/concept-drift-critical"
+
+      - alert: PredictionDistributionCollapse
+        expr: |
+          stddev_over_time(
+            histogram_quantile(0.5, rate(prediction_probability_bucket[15m]))[1h:5m]
+          ) < 0.01
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "La mediana de probabilidad predicha se ha estancado durante 30 minutos: posible modelo degenerado"
+          runbook: "https://wiki.internal/runbooks/prediction-collapse"

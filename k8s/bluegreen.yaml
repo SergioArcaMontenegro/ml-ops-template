@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlops-inference-blue
+  labels:
+    app: mlops-churn-inference
+    slot: blue
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mlops-churn-inference
+      slot: blue
+  template:
+    metadata:
+      labels:
+        app: mlops-churn-inference
+        slot: blue
+    spec:
+      containers:
+        - name: inference
+          image: ghcr.io/sergioarcamontenegro/mlops-production-service:v1.0.0
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlops-inference-green
+  labels:
+    app: mlops-churn-inference
+    slot: green
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mlops-churn-inference
+      slot: green
+  template:
+    metadata:
+      labels:
+        app: mlops-churn-inference
+        slot: green
+    spec:
+      containers:
+        - name: inference
+          image: ghcr.io/sergioarcamontenegro/mlops-production-service:v1.0.1
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlops-inference-production
+spec:
+  ports:
+    - port: 80
+      targetPort: 8000
+  selector:
+    app: mlops-churn-inference
+    slot: blue  # Cambia a "green" atómicamente tras smoke test exitoso
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlops-inference-preview
+spec:
+  ports:
+    - port: 80
+      targetPort: 8000
+  selector:
+    app: mlops-churn-inference
+    slot: green  # Slot previo para smoke tests

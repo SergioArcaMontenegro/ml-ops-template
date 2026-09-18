@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, main_español, main_english]
+  push:
+    branches: [main, main_español, main_english]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  lint:
+    name: Lint y análisis estático
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Instalar herramientas de linting
+        run: |
+          pip install ruff mypy
+
+      - name: Ruff (lint)
+        run: ruff check .
+
+      - name: mypy (type check)
+        run: mypy app/ --strict
+
+  tests:
+    name: Tests unitarios y cobertura
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Instalar dependencias
+        run: |
+          pip install -r requirements.txt
+
+      - name: Ejecutar tests con cobertura
+        run: |
+          pytest --cov=app --cov-report=xml --cov-report=term-missing tests/
+
+      - name: Quality Gate
+        run: |
+          python scripts/train.py
+          python scripts/quality_gate.py

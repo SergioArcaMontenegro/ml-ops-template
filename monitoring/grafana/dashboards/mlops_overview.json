@@ -1,0 +1,92 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "Throughput (RPS)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[1m]))",
+          "legendFormat": "RPS Total",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Latencia HTTP (p95 y p99)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95 (s)",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p99 (s)",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "Tasa de Error 5xx (%)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "targets": [
+        {
+          "expr": "(sum(rate(http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))) * 100",
+          "legendFormat": "% Errores 5xx",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Latencia Inferencia Pura del Modelo (p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(model_inference_duration_seconds_bucket[5m])) by (le, backend))",
+          "legendFormat": "Inferencia p95 {{backend}} (s)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Estado del Circuit Breaker (0=Closed, 1=Half-Open, 2=Open)",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "targets": [
+        {
+          "expr": "circuit_breaker_state",
+          "legendFormat": "Estado",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Detección de Data Drift (Evidently)",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "targets": [
+        {
+          "expr": "dataset_drift_detected",
+          "legendFormat": "Drift Detectado (1=Sí)",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38,
+  "title": "MLOps Inferencia y Drift Overview",
+  "uid": "mlops-inference-overview",
+  "version": 1
+}

@@ -1,0 +1,26 @@
+route:
+  receiver: "slack-ml-observability"
+  group_by: ["alertname"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers:
+        - severity = critical
+      receiver: "pagerduty-ml-oncall"
+      repeat_interval: 1h
+
+receivers:
+  - name: "slack-ml-observability"
+    slack_configs:
+      - channel: "#mlops-alerts"
+        api_url: "https://hooks.slack.com/services/DUMMY/WEBHOOK/URL"
+        send_resolved: true
+        title: "[{{ .Status | toUpper }}] {{ .CommonAnnotations.summary }}"
+        text: "{{ range .Alerts }}{{ .Annotations.summary }}\nRunbook: {{ .Annotations.runbook }}{{ end }}"
+
+  - name: "pagerduty-ml-oncall"
+    pagerduty_configs:
+      - service_key: "CHANGE_ME_PAGERDUTY_KEY"
+        severity: "critical"
+        description: "{{ .CommonAnnotations.summary }}"

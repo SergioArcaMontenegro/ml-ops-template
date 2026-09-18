@@ -1,0 +1,54 @@
+# Pipeline reproducible DVC (Capítulo 7)
+stages:
+  prepare:
+    cmd: python scripts/train.py --prepare-only
+    deps:
+      - data/raw/customer_churn.csv
+      - scripts/train.py
+    params:
+      - data
+      - feature_order
+    outs:
+      - data/processed/train.parquet
+      - data/processed/test.parquet
+      - data/reference/reference_dataset.parquet
+
+  train:
+    cmd: python scripts/train.py
+    deps:
+      - data/processed/train.parquet
+      - scripts/train.py
+    params:
+      - model
+      - feature_order
+    outs:
+      - models/xgboost_model.json
+      - models/model_manifest.json
+
+  convert_onnx:
+    cmd: python scripts/convert_to_onnx.py
+    deps:
+      - models/xgboost_model.json
+      - scripts/convert_to_onnx.py
+    outs:
+      - models/model.onnx
+
+  quantize:
+    cmd: python scripts/quantize_onnx.py
+    deps:
+      - models/model.onnx
+      - scripts/quantize_onnx.py
+    outs:
+      - models/model_quantized.onnx
+
+  quality_gate:
+    cmd: python scripts/quality_gate.py
+    deps:
+      - models/model.onnx
+      - data/processed/test.parquet
+      - scripts/quality_gate.py
+    params:
+      - quality_gate
+    metrics:
+      - metrics.json:
+          cache: false

@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: mlops-churn-shadow-mirror
+spec:
+  hosts:
+    - "churn.internal.service"
+  http:
+    - route:
+        - destination:
+            host: mlops-inference-stable
+            port:
+              number: 80
+          weight: 100
+      mirror:
+        host: mlops-inference-canary
+        port:
+          number: 80
+      mirrorPercentage:
+        value: 100.0  # Duplica el 100% del tráfico real hacia el shadow sin afectar al cliente

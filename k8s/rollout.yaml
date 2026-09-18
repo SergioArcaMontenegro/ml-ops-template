@@ -1,0 +1,66 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: mlops-churn-inference
+  labels:
+    app: mlops-churn-inference
+spec:
+  replicas: 4
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10
+        - pause: { duration: 5m }
+        - analysis:
+            templates:
+              - templateName: mlops-canary-analysis
+        - setWeight: 30
+        - pause: { duration: 10m }
+        - analysis:
+            templates:
+              - templateName: mlops-canary-analysis
+        - setWeight: 60
+        - pause: { duration: 10m }
+        - setWeight: 100
+      canaryService: mlops-inference-canary
+      stableService: mlops-inference-stable
+      trafficRouting:
+        nginx:
+          stableIngress: mlops-inference-ingress
+  selector:
+    matchLabels:
+      app: mlops-churn-inference
+  template:
+    metadata:
+      labels:
+        app: mlops-churn-inference
+    spec:
+      containers:
+        - name: inference
+          image: ghcr.io/sergioarcamontenegro/mlops-production-service:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: APP_ENV
+              value: "production"
+            - name: MODEL_BACKEND
+              value: "onnx"
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"

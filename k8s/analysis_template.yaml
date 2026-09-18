@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: mlops-canary-analysis
+spec:
+  args:
+    - name: service-name
+      value: mlops-inference-canary
+  metrics:
+    - name: error-rate-5xx
+      interval: 1m
+      count: 3
+      successCondition: result < 0.02
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://prometheus.observability.svc:9090
+          query: |
+            sum(rate(http_requests_total{service="{{args.service-name}}",status_code=~"5.."}[2m]))
+            /
+            sum(rate(http_requests_total{service="{{args.service-name}}"}[2m]))
+
+    - name: latency-p95
+      interval: 1m
+      count: 3
+      successCondition: result < 0.05
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://prometheus.observability.svc:9090
+          query: |
+            histogram_quantile(
+              0.95,
+              sum(rate(http_request_duration_seconds_bucket{service="{{args.service-name}}"}[2m])) by (le)
+            )
+
+    - name: data-drift-gate
+      interval: 2m
+      count: 2
+      successCondition: result == 0
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://prometheus.observability.svc:9090
+          query: dataset_drift_detected

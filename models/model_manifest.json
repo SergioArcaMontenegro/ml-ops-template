@@ -1,0 +1,19 @@
+{
+  "model_version": "v1.0.0",
+  "backend": "xgboost",
+  "sha256": "ed60759b3e27f4550de33ff74f8488e18a5dc8ba62705e079357f50c2303ed7e",
+  "trained_at": "2026-09-18T10:41:30.989768+00:00",
+  "metrics": {
+    "roc_auc": 0.9969,
+    "f1": 0.9762
+  },
+  "feature_order": [
+    "customer_tenure_months",
+    "monthly_charges",
+    "total_charges",
+    "num_support_tickets",
+    "contract_type_code",
+    "has_dependents",
+    "avg_session_duration_min"
+  ]
+}

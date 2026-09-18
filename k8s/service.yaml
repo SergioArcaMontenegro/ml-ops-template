@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlops-inference-stable
+  labels:
+    app: mlops-churn-inference
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+    - name: metrics
+      port: 9090
+      targetPort: 8000
+  selector:
+    app: mlops-churn-inference
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlops-inference-canary
+  labels:
+    app: mlops-churn-inference
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+  selector:
+    app: mlops-churn-inference
