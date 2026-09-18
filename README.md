@@ -128,6 +128,10 @@ Production-grade architecture template for Machine Learning Operations (MLOps) a
 git clone https://github.com/SergioArcaMontenegro/ml-ops-template.git
 cd ml-ops-template
 
+# Switch to your preferred branch:
+# git checkout main_english   # English edition (code, docstrings, README)
+# git checkout main_español   # Spanish edition (código, docstrings, README)
+
 # Create virtual environment and install dependencies with uv
 uv sync --frozen --group dev
 source .venv/bin/activate  # On Linux/macOS
